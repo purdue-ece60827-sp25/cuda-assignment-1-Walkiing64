@@ -18,6 +18,18 @@ int main(int argc, char** argv) {
 	std::string str;
 	int choice;
 
+	// Find the device properties
+	int device;
+	cudaDeviceProp prop;
+
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&prop, device);
+
+	dbprintf("GPU Name: %s\n", prop.name);
+	dbprintf("Max Threads Per Block: %d\n", prop.maxThreadsPerBlock);
+	dbprintf("Number of Multiprocessors: %d\n", prop.multiProcessorCount);
+	dbprintf("Max Threads Per Multiprocessor: %d\n", prop.maxThreadsPerMultiProcessor);
+
 	std::cout << "ECE 695 - Lab 1 \n";
 	std::cout << "Select application: \n";
 	std::cout << "  1 - CPU SAXPY \n";

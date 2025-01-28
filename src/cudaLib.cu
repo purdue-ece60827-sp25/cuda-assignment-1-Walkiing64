@@ -13,6 +13,14 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort)
 __global__ 
 void saxpy_gpu (float* x, float* y, float scale, int size) {
 	//	Insert GPU SAXPY kernel code here
+
+	//Get the index of this thread
+	int i = threadIdx.x + blockDim.x * blockIdx.x;
+
+	//Only do the calculation if we are in the thread bounds
+	if(i < size) {
+		y[i] += scale * x[i];
+	}
 }
 
 int runGpuSaxpy(int vectorSize) {
@@ -20,8 +28,16 @@ int runGpuSaxpy(int vectorSize) {
 	std::cout << "Hello GPU Saxpy!\n";
 
 	//	Insert code here
-	std::cout << "Lazy, you are!\n";
-	std::cout << "Write code, you must\n";
+
+	// Use the occupancy API to determine optimal block size
+	int minGridSize;
+	int blockSize;
+
+	cudaError_t err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, saxpy_gpu);
+
+	dbprintf("Error code: %s\n", cudaGetErrorString(err));
+	dbprintf("Minimum Grid Size: %d\n", minGridSize);
+	dbprintf("Optimal Block Size: %d\n", blockSize);
 
 	return 0;
 }
