@@ -19,14 +19,44 @@ void vectorInit(float* v, int size) {
 	}
 }
 
+void vectorLargeInit(float* v, int size) {
+	for(int idx = 0; idx < size; ++idx) {
+		v[idx] = (float) rand();
+	}
+}
+
+void vectorTestInit(float* v, int size) {
+	for(int idx = 0; idx < size; ++idx) {
+		v[idx] = float(INT32_MAX - idx);
+	}
+}
+
 int verifyVector(float* a, float* b, float* c, float scale, int size) {
 	int errorCount = 0;
 	for (int idx = 0; idx < size; ++idx) {
-		if (c[idx] != scale * a[idx] + b[idx]) {
+		float exp = scale * a[idx] + b[idx];
+		//Changed to account for 1bit differences in the LSB of the mantissa
+		if (c[idx] > exp * (1 + FP_TOL) || c[idx] < exp * (1 - FP_TOL)) {
 			++errorCount;
 			#ifndef DEBUG_PRINT_DISABLE
-				std::cout << "Idx " << idx << " expected " << scale * a[idx] + b[idx] 
-					<< " found " << c[idx] << " = " << a[idx] << " + " << b[idx] << "\n";
+				std::cout << "Idx " << idx << " expected " << exp 
+					<< " found " << c[idx] << " Difference = " << (scale * a[idx] + b[idx]) - c[idx] << "\n";
+				
+				// This prints the binary representation of the expected vs actual
+				char* act_char = reinterpret_cast<char*>(&c[idx]);
+				std::cout << "Actual: ";
+				for(int i = sizeof(float) - 1; i >= 0; i--) {
+					std::cout << std::bitset<8>(act_char[i]);
+				}
+				std::cout << std::endl;
+				
+				char* exp_char = reinterpret_cast<char*>(&exp);
+				std::cout << "Expect: ";
+				for(int i = sizeof(float) - 1; i >= 0; i--) {
+					std::cout << std::bitset<8>(exp_char[i]);
+				}
+				std::cout << std::endl;
+
 			#endif
 		}
 	}

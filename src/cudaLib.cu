@@ -30,14 +30,94 @@ int runGpuSaxpy(int vectorSize) {
 	//	Insert code here
 
 	// Use the occupancy API to determine optimal block size
-	int minGridSize;
 	int blockSize;
 
-	cudaError_t err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, saxpy_gpu);
+	cudaError_t err;
+	#ifndef DETECT_BLOCKSIZE
+		int minGridSize;
+		err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, saxpy_gpu);
 
-	dbprintf("Error code: %s\n", cudaGetErrorString(err));
-	dbprintf("Minimum Grid Size: %d\n", minGridSize);
-	dbprintf("Optimal Block Size: %d\n", blockSize);
+		dbprintf("Minimum Grid Size: %d\n", minGridSize);
+		dbprintf("Optimal Block Size: %d\n", blockSize);
+	#else
+		blockSize = 1024; //Manually set optimal blocksize to save API calls
+	#endif
+
+	// Generate the vectors and the scale factor
+	float* a = (float*) malloc(vectorSize * sizeof(*a));
+	float* b = (float*) malloc(vectorSize * sizeof(*b));
+	float* c = (float*) malloc(vectorSize * sizeof(*c));
+
+	if(a == nullptr || b == nullptr || c == nullptr) {
+		std::cout << "Unable to allocate vector memory! Exiting..." << std::endl;
+	}
+
+	vectorInit(a, vectorSize);
+	vectorInit(b, vectorSize);
+
+	// Make scale a random number between 0 and 100
+	float scale = (float) (rand() % 100);
+
+	#ifndef DEBUG_PRINT_DISABLE 
+		printf("\n Adding vectors : \n");
+		printf(" scale = %f\n", scale);
+		printf(" a = { ");
+		for (int i = 0; i < 5; ++i) {
+			printf("%3.4f, ", a[i]);
+		}
+		printf(" ... }\n");
+		printf(" b = { ");
+		for (int i = 0; i < 5; ++i) {
+			printf("%3.4f, ", b[i]);
+		}
+		printf(" ... }\n");
+	#endif
+
+	// Put the vectors on the GPU (only a and b are moved to device)
+	float* a_d, * b_d;
+	err = cudaMalloc((void**) &a_d, vectorSize * sizeof(*a_d));
+	if(err != cudaSuccess) {
+		std::cout << "Unable to allocate GPU vector memory! Exiting..." << std::endl;
+	}
+	cudaMemcpy(a_d, a, vectorSize * sizeof(*a_d), cudaMemcpyHostToDevice);
+
+	err = cudaMalloc((void**) &b_d, vectorSize * sizeof(*b_d));
+	if(err != cudaSuccess) {
+		std::cout << "Unable to allocate GPU vector memory! Exiting..." << std::endl;
+	}
+	cudaMemcpy(b_d, b, vectorSize * sizeof(*b_d), cudaMemcpyHostToDevice);
+
+	// Setup the kernel launch
+	dim3 dimGrid(vectorSize/blockSize, 1, 1);
+	if (vectorSize % blockSize != 0) {
+		// Take the ceiling of the blocks per grid
+		dimGrid.x++;
+	}
+	dim3 dimBlock(blockSize, 1, 1);
+
+	saxpy_gpu<<<dimGrid, dimBlock>>>(a_d, b_d, scale, vectorSize);
+
+	//Verify the results
+	cudaMemcpy(c, b_d, vectorSize * sizeof(*b_d), cudaMemcpyDeviceToHost);
+	
+	#ifndef DEBUG_PRINT_DISABLE 
+		printf(" c = { ");
+		for (int i = 0; i < 5; ++i) {
+			printf("%3.4f, ", c[i]);
+		}
+		printf(" ... }\n");
+	#endif
+
+	int errorCount = verifyVector(a, b, c, scale, vectorSize);
+	std::cout << "Found " << errorCount << " / " << vectorSize << " errors \n";
+
+	// Free CPU and GPU vectors
+	free(a);
+	free(b);
+	free(c);
+
+	cudaFree(a_d);
+	cudaFree(b_d);
 
 	return 0;
 }

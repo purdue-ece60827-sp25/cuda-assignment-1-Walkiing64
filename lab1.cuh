@@ -1,11 +1,10 @@
 /**
  * @file lab1.cuh
- * @author your name (you@domain.com)
+ * @author Clayton Walker (cpwalker@purdue.edu)
  * @brief 
  * @version 0.1
- * @date 2021-01-16
+ * @date 2025-01-28
  * 
- * @copyright Copyright (c) 2021
  * 
  */
 

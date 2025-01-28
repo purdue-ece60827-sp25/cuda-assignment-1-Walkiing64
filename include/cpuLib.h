@@ -4,6 +4,7 @@
 #define CPU_LIB_H
 
 	#include <iostream>
+	#include <bitset>
 	#include <cstdlib>
 	#include <ctime>
 	#include <random>
@@ -13,12 +14,19 @@
 	#include <cstdarg>
 	
 	// Uncomment this to suppress console output
-	// #define DEBUG_PRINT_DISABLE
+	#define DEBUG_PRINT_DISABLE
+
+	// Uncomment this to detect optimal blocksize for GPU kernels
+	#define DETECT_BLOCKSIZE
+
+	#define FP_TOL 0.000001
 
 	extern void dbprintf(const char* fmt...);
 
 
 	extern void vectorInit(float* v, int size);
+	extern void vectorLargeInit(float* v, int size);
+	extern void vectorTestInit(float* v, int size);
 	extern int verifyVector(float* a, float* b, float* c, float scale, int size);
 	extern void printVector(float* v, int size);
 	
