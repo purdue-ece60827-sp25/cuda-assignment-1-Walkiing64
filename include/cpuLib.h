@@ -16,9 +16,6 @@
 	// Uncomment this to suppress console output
 	#define DEBUG_PRINT_DISABLE
 
-	// Uncomment this to detect optimal blocksize for GPU kernels
-	#define DETECT_BLOCKSIZE
-
 	#define FP_TOL 0.000001
 
 	extern void dbprintf(const char* fmt...);

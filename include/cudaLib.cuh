@@ -9,7 +9,10 @@
 	#include <curand_kernel.h>
 
 	// Uncomment this to suppress console output
-	// #define DEBUG_PRINT_DISABLE
+	//#define DEBUG_PRINT_DISABLE
+
+	// Uncomment this to detect optimal blocksize for GPU kernels
+	//#define DETECT_BLOCKSIZE
 
 	#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 	extern inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true);
