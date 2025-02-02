@@ -79,12 +79,13 @@ int runGpuSaxpy(int vectorSize) {
 	if(err != cudaSuccess) {
 		std::cout << "Unable to allocate GPU vector memory! Exiting..." << std::endl;
 	}
-	cudaMemcpy(a_d, a, vectorSize * sizeof(*a_d), cudaMemcpyHostToDevice);
 
 	err = cudaMalloc((void**) &b_d, vectorSize * sizeof(*b_d));
 	if(err != cudaSuccess) {
 		std::cout << "Unable to allocate GPU vector memory! Exiting..." << std::endl;
 	}
+
+	cudaMemcpy(a_d, a, vectorSize * sizeof(*a_d), cudaMemcpyHostToDevice);
 	cudaMemcpy(b_d, b, vectorSize * sizeof(*b_d), cudaMemcpyHostToDevice);
 
 	// Setup the kernel launch
@@ -157,7 +158,7 @@ void generatePoints (uint64_t * pSums, uint64_t pSumSize, uint64_t sampleSize) {
 			float y = curand_uniform(&rng);
 
 			// Calculate the distance from the origin, and cast it to an int.
-			// Since 0 < dist < 2^0.5, this value will be 0 (hit) or 1 (miss)
+			// Since 0 < dist < 2, this value will be 0 (hit) or 1 (miss)
 			int miss = __float2int_rd(x * x + y * y);
 
 			// Since hitCount was initialized to the maximum number of hits, we subtract if a miss occured
@@ -268,7 +269,7 @@ double estimatePi(uint64_t generateThreadCount, uint64_t sampleSize,
 			dbprintf("Detecting the red blocksize produced error: %s\n", cudaGetErrorString(err));
 		}
 	#else
-		genBlockSize = 1024; //Manually set optimal blocksize to save API calls
+		genBlockSize = 512; //Manually set optimal blocksize to save API calls
 		redBlockSize = 768; //768
 	#endif
 
